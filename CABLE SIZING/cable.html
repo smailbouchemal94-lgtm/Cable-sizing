@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>IEC Cable Sizing Calculator & Image Converter — Free Single‑File Web App</title>
+  <meta name="description" content="Production‑ready, single‑file HTML5 app: IEC cable sizing calculator (voltage drop, ampacity, short‑circuit check) + in‑browser image format converter (PNG/JPEG/WebP/AVIF). Responsive UI with ad slots, multilingual SEO, Open Graph, and JSON‑LD schema." />
+  <meta name="keywords" content="IEC 60364, cable sizing, voltage drop, ampacity, short circuit, image converter, PNG, JPEG, WebP, AVIF, responsive web app" />
+  <meta name="robots" content="index,follow" />
+  <link rel="canonical" href="https://example.com/tools/cable-sizing-image-converter.html" />
+  <!-- Multilingual SEO alternates (single-file app uses hash query for language) -->
+  <link rel="alternate" hreflang="en" href="https://example.com/tools/cable-sizing-image-converter.html#?lang=en" />
+  <link rel="alternate" hreflang="fr" href="https://example.com/tools/cable-sizing-image-converter.html#?lang=fr" />
+  <link rel="alternate" hreflang="ar" href="https://example.com/tools/cable-sizing-image-converter.html#?lang=ar" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Engineering Utilities" />
+  <meta property="og:title" content="IEC Cable Sizing & Image Converter — Free Web App" />
+  <meta property="og:description" content="Size cables per IEC with voltage‑drop and short‑circuit checks, and convert images (PNG/JPEG/WebP/AVIF) entirely in your browser. No uploads. Single‑file app." />
+  <meta property="og:url" content="https://example.com/tools/cable-sizing-image-converter.html" />
+  <meta property="og:image" content="data:image/svg+xml;utf8,<?xml version='1.0' encoding='UTF-8'?>\
+  <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 630'>\
+    <defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop stop-color='%2300AEEF'/><stop offset='1' stop-color='%237355F6'/></linearGradient></defs>\
+    <rect width='1200' height='630' fill='url(%23g)'/>\
+    <g fill='white' font-family='system-ui,Segoe UI,Arial' text-anchor='middle'>\
+      <text x='600' y='280' font-size='68' font-weight='700'>IEC Cable Sizing</text>\
+      <text x='600' y='360' font-size='42'>+ Image Converter</text>\
+      <text x='600' y='430' font-size='28'>Single‑file App · No Uploads</text>\
+    </g>\
+  </svg>" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="IEC Cable Sizing & Image Converter — Free Web App" />
+  <meta name="twitter:description" content="Size cables per IEC and convert images in your browser. Responsive, multilingual, single‑file app." />
+  <meta name="theme-color" content="#0ea5e9" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop stop-color='%2300AEEF'/%3E%3Cstop offset='1' stop-color='%237355F6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect rx='12' ry='12' width='64' height='64' fill='url(%23g)'/%3E%3Cpath d='M15 44h34M19 20h18l8 8v16' stroke='%23fff' stroke-width='4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='23' cy='44' r='3' fill='%23fff'/%3E%3Ccircle cx='41' cy='44' r='3' fill='%23fff'/%3E%3C/svg%3E" />
+
+  <style>
+    :root{
+      --bg: #0b1020;           /* dark gradient base */
+      --bg2:#0e1428;
+      --card:#111830;
+      --muted:#91a0b6;
+      --text:#ebf2ff;
+      --brand:#00aeef;
+      --accent:#7355f6;
+      --ok:#22c55e;
+      --warn:#f59e0b;
+      --err:#ef4444;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 16px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; color:var(--text); background: radial-gradient(1200px 600px at 10% -10%, #153056 0%, var(--bg) 40%),
+                                        radial-gradient(800px 600px at 90% -10%, #221b42 0%, var(--bg2) 45%);
+      font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    a{color:inherit}
+    .app{max-width:1200px;margin:0 auto;padding:24px}
+    header{
+      display:flex;align-items:center;gap:16px;justify-content:space-between;margin-bottom:16px
+    }
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand .logo{width:40px;height:40px}
+    .brand h1{font-size:20px;margin:0;font-weight:700;letter-spacing:.2px}
+    .subtitle{margin:0;color:var(--muted);font-size:13px}
+    .controls{display:flex;gap:8px;align-items:center}
+    select, input[type="number"], input[type="text"], button{border:1px solid rgba(255,255,255,.08);background:#0f152b;color:var(--text);padding:10px 12px;border-radius:10px}
+    button{background:linear-gradient(90deg,var(--brand),var(--accent));border:none;font-weight:600;cursor:pointer}
+    button.secondary{background:#0f152b}
+    button:disabled{opacity:.6;cursor:not-allowed}
+
+    .layout{display:grid;grid-template-columns: 1fr; gap:16px}
+    @media(min-width: 980px){.layout{grid-template-columns: 1fr 320px}}
+
+    .card{background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)); border:1px solid rgba(255,255,255,.08); border-radius:var(--radius); box-shadow:var(--shadow)}
+    .card h2{margin:0 0 8px 0;font-size:18px}
+    .card .pad{padding:18px}
+    .split{display:grid;grid-template-columns:1fr;gap:12px}
+    @media(min-width:720px){.split{grid-template-columns: repeat(2,1fr)}}
+    .grid{display:grid;grid-template-columns:1fr;gap:10px}
+    .grid-3{display:grid;grid-template-columns:1fr;gap:10px}
+    @media(min-width:720px){.grid-3{grid-template-columns:repeat(3,1fr)}}
+    label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
+    .row{display:flex;gap:8px;align-items:center}
+
+    .nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+    .nav button{background:#0f152b}
+    .nav button.active{background:linear-gradient(90deg,var(--brand),var(--accent))}
+
+    .ad-slot{position:relative;min-height:200px;border:1px dashed rgba(255,255,255,.2);border-radius:14px;overflow:hidden;background:repeating-linear-gradient(45deg,rgba(255,255,255,.03),rgba(255,255,255,.03) 10px,transparent 10px,transparent 20px)}
+    .ad-slot .ad-label{position:absolute;top:8px;left:8px;font-size:11px;color:var(--muted);background:#0f152b;border:1px solid rgba(255,255,255,.08);padding:4px 8px;border-radius:999px}
+    .ad-slot .ad-content{position:absolute;inset:0;display:grid;place-items:center;color:#a7b7d1;font-weight:600;font-size:14px}
+
+    .muted{color:var(--muted)}
+    .foot{margin-top:18px;color:var(--muted);font-size:13px}
+
+    .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(120%); background:#0f152b; border:1px solid rgba(255,255,255,.12); padding:12px 16px;border-radius:999px; box-shadow:var(--shadow); display:flex;align-items:center; gap:10px; z-index:9999; transition:transform .35s ease}
+    .toast.show{transform:translateX(-50%) translateY(0%)}
+    .toast .ok{width:18px;height:18px;border-radius:999px;background:var(--ok);display:inline-block}
+
+    .out{padding:12px;border-radius:12px;background:#0d1226;border:1px dashed rgba(255,255,255,.12)}
+    .badge{display:inline-block;background:#0f152b;border:1px solid rgba(255,255,255,.1);padding:4px 8px;border-radius:999px;font-size:12px;color:#c3d0e6}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+
+    .table{width:100%;border-collapse:collapse}
+    .table th,.table td{border-bottom:1px solid rgba(255,255,255,.08);padding:8px 6px;text-align:left}
+    .table th{color:#cfe0ff;font-weight:600}
+
+    .preview{display:grid;place-items:center;border:1px dashed rgba(255,255,255,.2);border-radius:12px;min-height:160px;background:rgba(255,255,255,.02);overflow:hidden}
+    .preview img{max-width:100%;height:auto;display:block}
+
+    .rtl .brand h1, .rtl .subtitle, .rtl label, .rtl .foot, .rtl .ad-content{direction:rtl;text-align:right}
+  </style>
+
+  <!-- JSON-LD Schema (SoftwareApplication / WebApplication) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "IEC Cable Sizing & Image Converter",
+    "operatingSystem": "Web",
+    "applicationCategory": "UtilitiesApplication",
+    "inLanguage": ["en","fr","ar"],
+    "description": "Size electrical cables per IEC (ampacity, voltage drop, short-circuit) and convert images between PNG/JPEG/WebP/AVIF in your browser. No data leaves your device.",
+    "url": "https://example.com/tools/cable-sizing-image-converter.html",
+    "offers": {"@type":"Offer","price":"0","priceCurrency":"USD"}
+  }
+  </script>
+</head>
+<body>
+  <div class="app" id="app">
+    <header>
+      <div class="brand">
+        <img class="logo" alt="App logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop stop-color='%2300AEEF'/%3E%3Cstop offset='1' stop-color='%237355F6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect rx='12' ry='12' width='64' height='64' fill='url(%23g)'/%3E%3Cpath d='M15 44h34M19 20h18l8 8v16' stroke='%23fff' stroke-width='4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='23' cy='44' r='3' fill='%23fff'/%3E%3Ccircle cx='41' cy='44' r='3' fill='%23fff'/%3E%3C/svg%3E"/>
+        <div>
+          <h1 data-i18n="app_title">IEC Cable Sizing & Image Converter</h1>
+          <p class="subtitle" data-i18n="app_sub">Single‑file, privacy‑first engineering utilities</p>
+        </div>
+      </div>
+      <div class="controls">
+        <select id="langPicker" aria-label="Language">
+          <option value="en">English</option>
+          <option value="fr">Français</option>
+          <option value="ar">العربية</option>
+        </select>
+        <button class="secondary" id="shareBtn" title="Copy shareable link" data-i18n="share">Share</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <main>
+        <div class="card pad">
+          <div class="nav" role="tablist" aria-label="Tools">
+            <button id="tabCable" class="active" role="tab" aria-selected="true" data-tab="cable" data-i18n="tab_cable">Cable Sizing (IEC)</button>
+            <button id="tabConvert" role="tab" aria-selected="false" data-tab="convert" data-i18n="tab_convert">Image Converter</button>
+          </div>
+
+          <!-- Cable Sizing -->
+          <section id="panel-cable" role="tabpanel" aria-labelledby="tabCable">
+            <div class="split">
+              <div>
+                <h2 data-i18n="cable_inputs">Inputs</h2>
+                <div class="grid">
+                  <div>
+                    <label for="phase" data-i18n="phase">System</label>
+                    <div class="row"><select id="phase">
+                      <option value="1">1‑Phase</option>
+                      <option value="3" selected>3‑Phase</option>
+                    </select>
+                    <input type="number" id="voltage" min="12" max="1000" value="400" step="1" style="width:120px" aria-label="Voltage (V)" />
+                    <span class="badge">V</span></div>
+                  </div>
+
+                  <div>
+                    <label for="power" data-i18n="load">Load</label>
+                    <div class="row">
+                      <input type="number" id="power" value="30" step="0.1" aria-label="Power" />
+                      <select id="powerUnit" aria-label="Unit">
+                        <option value="kW">kW</option>
+                        <option value="kVA">kVA</option>
+                        <option value="A">A</option>
+                      </select>
+                      <input type="number" id="pf" value="0.9" min="0.2" max="1" step="0.01" aria-label="Power factor" />
+                      <span class="badge">PF</span>
+                    </div>
+                  </div>
+
+                  <div class="grid-3">
+                    <div>
+                      <label for="length" data-i18n="length">Route length (one‑way)</label>
+                      <div class="row"><input type="number" id="length" value="60" step="0.1" /><span class="badge">m</span></div>
+                    </div>
+                    <div>
+                      <label for="vdPct" data-i18n="vdrop">Max voltage drop</label>
+                      <div class="row"><input type="number" id="vdPct" value="5" step="0.1" /><span class="badge">%</span></div>
+                    </div>
+                    <div>
+                      <label for="circuits" data-i18n="grouping">Circuits grouped</label>
+                      <input type="number" id="circuits" value="1" min="1" step="1" />
+                    </div>
+                  </div>
+
+                  <div class="grid-3">
+                    <div>
+                      <label for="material" data-i18n="material">Conductor</label>
+                      <select id="material"><option value="Cu" selected>Copper (Cu)</option><option value="Al">Aluminium (Al)</option></select>
+                    </div>
+                    <div>
+                      <label for="insulation" data-i18n="insulation">Insulation</label>
+                      <select id="insulation"><option value="XLPE" selected>XLPE (90°C)</option><option value="PVC">PVC (70°C)</option></select>
+                    </div>
+                    <div>
+                      <label for="install" data-i18n="install">Installation</label>
+                      <select id="install">
+                        <option value="air" selected>In air / tray</option>
+                        <option value="conduit">In conduit</option>
+                        <option value="buried">Buried (soil)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="grid-3">
+                    <div>
+                      <label for="amb" data-i18n="ambient">Ambient temp</label>
+                      <div class="row"><input type="number" id="amb" value="30" step="1" /><span class="badge">°C</span></div>
+                    </div>
+                    <div>
+                      <label for="faultI" data-i18n="sc_current">Fault current (prospective)</label>
+                      <div class="row"><input type="number" id="faultI" value="10" step="0.1" /><span class="badge">kA</span></div>
+                    </div>
+                    <div>
+                      <label for="faultT" data-i18n="sc_time">Protection clearing time</label>
+                      <div class="row"><input type="number" id="faultT" value="0.2" step="0.01" /><span class="badge">s</span></div>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <button id="calcBtn" data-i18n="calculate">Calculate</button>
+                    <button id="resetCable" class="secondary" type="button" data-i18n="reset">Reset</button>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h2 data-i18n="results">Results</h2>
+                <div class="out" id="results">
+                  <div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:8px">
+                    <span class="badge" id="resCross">— mm²</span>
+                    <span class="badge" id="resI">I<sub>design</sub>: — A</span>
+                    <span class="badge" id="resCap">I<sub>z, adj</sub>: — A</span>
+                    <span class="badge" id="resVD">ΔV: — %</span>
+                    <span class="badge" id="resSC">S<sub>min, SC</sub>: — mm²</span>
+                  </div>
+                  <div id="resText" class="mono"></div>
+                </div>
+
+                <h3 style="margin-top:14px" data-i18n="notes">Notes</h3>
+                <ul class="muted" style="margin-top:6px">
+                  <li data-i18n="note1">Uses simplified IEC‑aligned tables and correction factors for educational/pre‑design purposes. Verify with IEC 60364‑5‑52 and manufacturer data before construction.</li>
+                  <li data-i18n="note2">Voltage drop constants assume 50–60 Hz, typical XLPE/PVC. Aluminium factors applied where relevant.</li>
+                  <li data-i18n="note3">Short‑circuit check uses S = I·√t / k (k dependent on material/insulation). Protective device and earth loop impedance verification are out of scope.</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <!-- Image Converter -->
+          <section id="panel-convert" role="tabpanel" aria-labelledby="tabConvert" hidden>
+            <div class="split">
+              <div>
+                <h2 data-i18n="conv_inputs">Image Converter</h2>
+                <div class="grid">
+                  <div>
+                    <label for="fileIn" data-i18n="file">Source image</label>
+                    <input type="file" id="fileIn" accept="image/*" />
+                  </div>
+                  <div class="grid-3">
+                    <div>
+                      <label for="fmt" data-i18n="format">Target format</label>
+                      <select id="fmt">
+                        <option value="image/png">PNG</option>
+                        <option value="image/jpeg">JPEG</option>
+                        <option value="image/webp" selected>WebP</option>
+                        <option value="image/avif">AVIF</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label for="quality" data-i18n="quality">Quality</label>
+                      <input id="quality" type="range" min="0.4" max="1" step="0.01" value="0.9" />
+                    </div>
+                    <div>
+                      <label for="resize" data-i18n="resize">Max width (px, optional)</label>
+                      <input type="number" id="resize" min="0" step="10" placeholder="0 = original" />
+                    </div>
+                  </div>
+                  <div class="row">
+                    <button id="convertBtn" data-i18n="convert">Convert</button>
+                    <button id="downloadBtn" class="secondary" disabled data-i18n="download">Download</button>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <h2 data-i18n="preview">Preview</h2>
+                <div class="preview" id="preview"> <span class="muted" data-i18n="drop">Drop an image here or use the file picker.</span> </div>
+                <div class="foot"><span id="metaInfo" class="muted"></span></div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div class="card pad" style="margin-top:12px">
+          <h2 data-i18n="disclaimer_title">Disclaimer</h2>
+          <p class="muted" data-i18n="disclaimer_body">This tool provides indicative results only. Always confirm with the latest IEC standards, local regulations, and cable manufacturer datasheets. The image converter runs entirely in your browser; no files are uploaded.</p>
+        </div>
+      </main>
+
+      <aside>
+        <div class="card pad">
+          <h2 data-i18n="sponsored">Sponsored</h2>
+          <div class="ad-slot" role="complementary" aria-label="Advertisement">
+            <span class="ad-label" data-i18n="ad">AD</span>
+            <div class="ad-content">Responsive ad slot (336×280 / 300×250)</div>
+          </div>
+        </div>
+        <div class="card pad" style="margin-top:12px">
+          <h2 data-i18n="quick_links">Quick Links</h2>
+          <ul class="muted" style="margin:0 0 0 14px">
+            <li><a href="#" onclick="window.scrollTo({top:0,behavior:'smooth'})" data-i18n="to_top">Back to top</a></li>
+            <li><a href="#panel-cable" data-i18n="go_cable">Cable Sizing</a></li>
+            <li><a href="#panel-convert" data-i18n="go_convert">Image Converter</a></li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+
+    <footer class="foot">
+      <span>© <span id="year"></span> Engineering Utilities · </span>
+      <span data-i18n="license">Free to use. No tracking.</span>
+    </footer>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true">
+    <span class="ok" aria-hidden="true"></span>
+    <span id="toastMsg">Conversion complete</span>
+  </div>
+
+  <script>
+  // ===== i18n =====
+  const I18N = {
+    en: {
+      app_title: "IEC Cable Sizing & Image Converter",
+      app_sub: "Single‑file, privacy‑first engineering utilities",
+      share: "Share",
+      tab_cable: "Cable Sizing (IEC)",
+      tab_convert: "Image Converter",
+      cable_inputs: "Inputs",
+      phase: "System",
+      load: "Load",
+      length: "Route length (one‑way)",
+      vdrop: "Max voltage drop",
+      grouping: "Circuits grouped",
+      material: "Conductor",
+      insulation: "Insulation",
+      install: "Installation",
+      ambient: "Ambient temp",
+      sc_current: "Fault current (prospective)",
+      sc_time: "Protection clearing time",
+      calculate: "Calculate",
+      reset: "Reset",
+      results: "Results",
+      notes: "Notes",
+      note1: "Uses simplified IEC‑aligned tables and correction factors for educational/pre‑design purposes. Verify with IEC 60364‑5‑52 and manufacturer data before construction.",
+      note2: "Voltage drop constants assume 50–60 Hz, typical XLPE/PVC. Aluminium factors applied where relevant.",
+      note3: "Short‑circuit check uses S = I·√t / k (k dependent on material/insulation). Protective device and earth loop impedance verification are out of scope.",
+      conv_inputs: "Image Converter",
+      file: "Source image",
+      format: "Target format",
+      quality: "Quality",
+      resize: "Max width (px, optional)",
+      convert: "Convert",
+      download: "Download",
+      preview: "Preview",
+      drop: "Drop an image here or use the file picker.",
+      disclaimer_title: "Disclaimer",
+      disclaimer_body: "This tool provides indicative results only. Always confirm with the latest IEC standards, local regulations, and cable manufacturer datasheets. The image converter runs entirely in your browser; no files are uploaded.",
+      sponsored: "Sponsored",
+      ad: "AD",
+      quick_links: "Quick Links",
+      to_top: "Back to top",
+      go_cable: "Cable Sizing",
+      go_convert: "Image Converter",
+      license: "Free to use. No tracking.",
+    },
+    fr: {
+      app_title: "Dimensionnement IEC des câbles & Convertisseur d’images",
+      app_sub: "Utilitaires d’ingénierie, fichier unique et respectueux de la vie privée",
+      share: "Partager",
+      tab_cable: "Dimensionnement (IEC)",
+      tab_convert: "Convertisseur d’images",
+      cable_inputs: "Paramètres",
+      phase: "Système",
+      load: "Charge",
+      length: "Longueur de parcours (aller)",
+      vdrop: "Chute de tension max",
+      grouping: "Circuits groupés",
+      material: "Conducteur",
+      insulation: "Isolation",
+      install: "Installation",
+      ambient: "Température ambiante",
+      sc_current: "Courant de défaut (prospectif)",
+      sc_time: "Temps de déclenchement",
+      calculate: "Calculer",
+      reset: "Réinitialiser",
+      results: "Résultats",
+      notes: "Notes",
+      note1: "Tables et facteurs de correction simplifiés alignés IEC, pour l’avant‑projet. Vérifiez avec l’IEC 60364‑5‑52 et les fiches fabricants avant travaux.",
+      note2: "Constantes de chute de tension pour 50–60 Hz, XLPE/PVC typiques. Facteurs aluminium appliqués si nécessaire.",
+      note3: "Vérification CC: S = I·√t / k (k selon matériau/isolation). Dispositifs de protection et impédance de boucle hors périmètre.",
+      conv_inputs: "Convertisseur d’images",
+      file: "Image source",
+      format: "Format cible",
+      quality: "Qualité",
+      resize: "Largeur max (px, optionnel)",
+      convert: "Convertir",
+      download: "Télécharger",
+      preview: "Aperçu",
+      drop: "Déposez une image ici ou utilisez le sélecteur.",
+      disclaimer_title: "Avertissement",
+      disclaimer_body: "Outil indicatif. Vérifiez toujours avec les normes IEC, la réglementation locale et les fiches fabricants. Le convertisseur d’images fonctionne 100% dans votre navigateur.",
+      sponsored: "Sponsorisé",
+      ad: "PUB",
+      quick_links: "Accès rapides",
+      to_top: "Haut de page",
+      go_cable: "Dimensionnement",
+      go_convert: "Convertisseur",
+      license: "Libre d’utilisation. Sans pistage.",
+    },
+    ar: {
+      app_title: "حساب مقطع الكابل حسب IEC ومحّول صور",
+      app_sub: "أدوات هندسية بملف واحد وتحافظ على الخصوصية",
+      share: "مشاركة",
+      tab_cable: "حساب الكابل (IEC)",
+      tab_convert: "تحويل الصور",
+      cable_inputs: "المدخلات",
+      phase: "النظام",
+      load: "الحمل",
+      length: "طول المسار (ذهاب)",
+      vdrop: "أقصى هبوط جهد",
+      grouping: "عدد الدوائر المجتمعة",
+      material: "الموصل",
+      insulation: "العزل",
+      install: "طريقة التركيب",
+      ambient: "درجة حرارة المحيط",
+      sc_current: "تيار قصر (محتمل)",
+      sc_time: "زمن فصل الحماية",
+      calculate: "احسب",
+      reset: "إعادة تعيين",
+      results: "النتائج",
+      notes: "ملاحظات",
+      note1: "جداول وعوامل تصحيح مبسطة متوافقة مع IEC للاستخدام التعليمي والمبدئي. يلزم التحقق نهائيًا بالمعيار IEC 60364‑5‑52 وبيانات المصنع.",
+      note2: "ثوابت هبوط الجهد مفترضة لتردد 50–60 هرتز وعوازل XLPE/PVC. يتم تطبيق عوامل الألمنيوم عند الحاجة.",
+      note3: "فحص القصر: S = I·√t / k (k حسب المادة/العزل). التحقق من أجهزة الحماية ومعاوقة حلقة الأرض خارج النطاق.",
+      conv_inputs: "محّول الصور",
+      file: "الصورة المصدر",
+      format: "الصيغة الهدف",
+      quality: "الجودة",
+      resize: "أقصى عرض (بكسل – اختياري)",
+      convert: "حوّل",
+      download: "تنزيل",
+      preview: "معاينة",
+      drop: "أسقط صورة هنا أو استخدم المُلتقط.",
+      disclaimer_title: "تنبيه",
+      disclaimer_body: "النتائج إرشادية فقط. راجع أحدث مواصفات IEC واللوائح المحلية وبيانات المصنّع. يعمل محوّل الصور محليًا بالكامل على متصفحك.",
+      sponsored: "إعلان",
+      ad: "إعلان",
+      quick_links: "روابط سريعة",
+      to_top: "أعلى الصفحة",
+      go_cable: "حساب الكابل",
+      go_convert: "تحويل الصور",
+      license: "مجاني – بدون تتبع.",
+    }
+  };
+
+  function applyLang(lang){
+    const dict = I18N[lang] || I18N.en;
+    document.querySelectorAll('[data-i18n]').forEach(el=>{
+      const key = el.getAttribute('data-i18n');
+      if(dict[key]) el.textContent = dict[key];
+    });
+    document.documentElement.lang = lang;
+    const rtl = lang === 'ar';
+    document.documentElement.dir = rtl ? 'rtl' : 'ltr';
+    document.body.classList.toggle('rtl', rtl);
+    // Update URL hash for shareability
+    const url = new URL(location.href);
+    url.hash = `?lang=${lang}`;
+    history.replaceState({}, '', url.toString());
+  }
+
+  // ===== Tabs =====
+  const tabBtns = document.querySelectorAll('.nav button');
+  tabBtns.forEach(btn=>btn.addEventListener('click', ()=>{
+    tabBtns.forEach(b=>{b.classList.remove('active'); b.setAttribute('aria-selected','false')});
+    btn.classList.add('active'); btn.setAttribute('aria-selected','true');
+    const tab = btn.dataset.tab;
+    document.getElementById('panel-cable').hidden = tab !== 'cable';
+    document.getElementById('panel-convert').hidden = tab !== 'convert';
+  }));
+
+  // ===== Toast =====
+  const toast = document.getElementById('toast');
+  const toastMsg = document.getElementById('toastMsg');
+  function showToast(msg){
+    toastMsg.textContent = msg || 'Conversion complete';
+    toast.classList.add('show');
+    setTimeout(()=> toast.classList.remove('show'), 2800);
+  }
+
+  // ===== Share button =====
+  document.getElementById('shareBtn').addEventListener('click', async ()=>{
+    try{
+      const link = location.href;
+      await navigator.clipboard.writeText(link);
+      showToast('Link copied');
+    }catch{ showToast('Copied'); }
+  });
+
+  // ===== Year =====
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // ===== Language Picker =====
+  const langPicker = document.getElementById('langPicker');
+  langPicker.addEventListener('change', e=> applyLang(e.target.value));
+  (function initLang(){
+    const hash = location.hash;
+    const m = /lang=(en|fr|ar)/.exec(hash);
+    const lang = m? m[1] : 'en';
+    langPicker.value = lang;
+    applyLang(lang);
+  })();
+
+  // ===== Cable Sizing Logic (Simplified IEC‑aligned) =====
+  const sizes = [1.5,2.5,4,6,10,16,25,35,50,70,95,120,150,185,240,300];
+  // Base ampacity (A) for Cu, XLPE, single core, in air/tray @30°C (indicative)
+  const baseAmpCu = {
+    1.5:19,2.5:26,4:35,6:45,10:61,16:81,25:108,35:135,50:165,70:207,95:247,120:285,150:328,185:377,240:452,300:518
+  };
+  // Voltage drop constants mV/A·m (3‑phase). For 1‑phase multiply by ~2.
+  const mvPerAmCu = { 1.5:29, 2.5:18, 4:11, 6:7.3, 10:4.4, 16:2.8, 25:1.75, 35:1.25, 50:0.93, 70:0.64, 95:0.47, 120:0.39, 150:0.32, 185:0.28, 240:0.22, 300:0.18 };
+
+  function groupingFactor(n){
+    if(n<=1) return 1.0; if(n===2) return 0.8; if(n===3) return 0.7; if(n===4) return 0.65; if(n<=6) return 0.6; return 0.55;
+  }
+  function installFactor(install){
+    if(install==='air') return 1.0; if(install==='conduit') return 0.95; if(install==='buried') return 0.9; return 1.0;
+  }
+  function tempFactorXLPE(amb){ // ref 30°C base; rough mapping
+    if(amb<=25) return 1.06; if(amb<=30) return 1.0; if(amb<=35) return 0.94; if(amb<=40) return 0.91; if(amb<=45) return 0.87; if(amb<=50) return 0.82; if(amb<=55) return 0.76; return 0.71;
+  }
+  function tempFactorPVC(amb){ // 30°C base; rough mapping
+    if(amb<=25) return 1.03; if(amb<=30) return 1.0; if(amb<=35) return 0.94; if(amb<=40) return 0.87; if(amb<=45) return 0.79; if(amb<=50) return 0.71; if(amb<=55) return 0.61; return 0.5;
+  }
+  function kShort(material, insulation){
+    // k (A·s^0.5/mm²) per IEC 60364 for 1s; approximations
+    if(material==='Cu' && insulation==='XLPE') return 143;
+    if(material==='Cu' && insulation==='PVC') return 115;
+    if(material==='Al' && insulation==='XLPE') return 94;
+    if(material==='Al' && insulation==='PVC') return 76;
+    return 115;
+  }
+
+  function computeCable(){
+    const phase = Number(document.getElementById('phase').value);
+    const V = Number(document.getElementById('voltage').value);
+    const P = Number(document.getElementById('power').value);
+    const unit = document.getElementById('powerUnit').value;
+    const pf = Number(document.getElementById('pf').value);
+    const L = Number(document.getElementById('length').value);
+    const vdPctMax = Number(document.getElementById('vdPct').value);
+    const circuits = Number(document.getElementById('circuits').value);
+    const material = document.getElementById('material').value;
+    const insulation = document.getElementById('insulation').value;
+    const install = document.getElementById('install').value;
+    const amb = Number(document.getElementById('amb').value);
+    const IkA = Number(document.getElementById('faultI').value);
+    const tsc = Number(document.getElementById('faultT').value);
+
+    // Design current
+    let I;
+    if(unit==='A') I = P;
+    else if(unit==='kW') {
+      if(phase===3) I = (P*1000)/(Math.sqrt(3)*V*pf); else I = (P*1000)/(V*pf);
+    } else { // kVA
+      if(phase===3) I = (P*1000)/(Math.sqrt(3)*V); else I = (P*1000)/V;
+    }
+
+    // Correction factors
+    const fTemp = (insulation==='XLPE') ? tempFactorXLPE(amb) : tempFactorPVC(amb);
+    const fGroup = groupingFactor(circuits);
+    const fInst = installFactor(install);
+    const fMat = (material==='Cu') ? 1.0 : 0.8; // Al vs Cu baseline
+    const fIns = (insulation==='XLPE') ? 1.0 : 0.85; // PVC vs XLPE baseline
+
+    const factor = fTemp * fGroup * fInst * fMat * fIns; // overall derating
+
+    // Find minimum cross‑section meeting ampacity and voltage drop
+    let chosen = null, IzAdj=0, vdropPct=0, msg="";
+    for(const S of sizes){
+      const base = baseAmpCu[S];
+      const Iz = base * factor; // adjusted capacity
+      // Voltage drop
+      const mv = (material==='Cu' ? mvPerAmCu[S] : mvPerAmCu[S]*1.6) * (phase===1 ? 2.0 : 1.0);
+      const dV = (I * mv * L) / 1000; // in Volts (mV/A·m * A * m / 1000)
+      const dVPct = (dV / V) * 100;
+      if(Iz >= I && dVPct <= vdPctMax){ chosen = S; IzAdj = Iz; vdropPct = dVPct; break; }
+    }
+
+    // Short‑circuit minimum S
+    const Ishort = IkA*1000; const k = kShort(material, insulation);
+    const SminSC = (Ishort*Math.sqrt(tsc))/k; // mm²
+
+    // Build result text
+    const res = document.getElementById('resText');
+    const resCross = document.getElementById('resCross');
+    const resI = document.getElementById('resI');
+    const resCap = document.getElementById('resCap');
+    const resVD = document.getElementById('resVD');
+    const resSC = document.getElementById('resSC');
+
+    resI.innerHTML = `I<sub>design</sub>: ${I.toFixed(2)} A`;
+    resSC.innerHTML = `S<sub>min, SC</sub>: ${SminSC.toFixed(1)} mm²`;
+
+    if(chosen===null){
+      resCross.textContent = 'No size meets constraints';
+      resCap.innerHTML = `I<sub>z, adj</sub>: — A`;
+      resVD.innerHTML = `ΔV: — %`;
+      res.innerHTML = `<div>Try increasing allowable voltage drop, using XLPE/Cu, reducing length, or using parallel conductors.</div>`;
+    } else {
+      const margin = ((IzAdj/I)-1)*100;
+      const passSC = chosen >= SminSC ? 'PASS' : 'FAIL';
+      resCross.textContent = `${chosen} mm² (${material}, ${insulation})`;
+      resCap.innerHTML = `I<sub>z, adj</sub>: ${IzAdj.toFixed(0)} A`;
+      resVD.innerHTML = `ΔV: ${vdropPct.toFixed(2)} %`;
+      res.innerHTML = `
+        <div><strong>Recommended section:</strong> ${chosen} mm² ${material} (${insulation}).</div>
+        <div>Adjusted ampacity: ${IzAdj.toFixed(0)} A · Load current: ${I.toFixed(2)} A · Margin: ${margin.toFixed(1)}%.</div>
+        <div>Voltage drop over ${L} m @ ${I.toFixed(1)} A: ${vdropPct.toFixed(2)}% (limit ${vdPctMax}%).</div>
+        <div>Short‑circuit check (S ≥ I·√t/k): required ${SminSC.toFixed(1)} mm² → <span class="badge" style="border-color:${passSC==='PASS'?'#2dd4bf':'#ef4444'}">${passSC}</span>.</div>
+      `;
+    }
+
+    showToast('Sizing complete'); // toast after success
+  }
+  document.getElementById('calcBtn').addEventListener('click', computeCable);
+  document.getElementById('resetCable').addEventListener('click', ()=>{
+    ['voltage','power','pf','length','vdPct','circuits','amb','faultI','faultT'].forEach(id=>{
+      const el = document.getElementById(id);
+      el.value = el.getAttribute('value') || el.defaultValue || el.value;
+    });
+    document.getElementById('material').value='Cu';
+    document.getElementById('insulation').value='XLPE';
+    document.getElementById('install').value='air';
+    document.getElementById('powerUnit').value='kW';
+    document.getElementById('phase').value='3';
+    document.getElementById('resText').textContent='';
+    document.getElementById('resCross').textContent='— mm²';
+    document.getElementById('resI').innerHTML='I<sub>design</sub>: — A';
+    document.getElementById('resCap').innerHTML='I<sub>z, adj</sub>: — A';
+    document.getElementById('resVD').innerHTML='ΔV: — %';
+    document.getElementById('resSC').innerHTML='S<sub>min, SC</sub>: — mm²';
+  });
+
+  // ===== Image Converter =====
+  const fileIn = document.getElementById('fileIn');
+  const fmt = document.getElementById('fmt');
+  const quality = document.getElementById('quality');
+  const resizeMax = document.getElementById('resize');
+  const convertBtn = document.getElementById('convertBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const preview = document.getElementById('preview');
+  const metaInfo = document.getElementById('metaInfo');
+
+  let outBlob = null; let outName = '';
+
+  function setPreview(img){
+    preview.innerHTML='';
+    preview.appendChild(img);
+  }
+  function bytes(n){
+    if(!n && n!==0) return '—';
+    const u=['B','KB','MB','GB']; let i=0; while(n>1024 && i<u.length-1){n/=1024;i++} return n.toFixed(n>1024?1:0)+' '+u[i];
+  }
+
+  async function readFile(f){
+    return new Promise((res,rej)=>{
+      const reader = new FileReader();
+      reader.onerror = () => rej(reader.error);
+      reader.onload = () => res(reader.result);
+      reader.readAsDataURL(f);
+    });
+  }
+
+  async function convert(){
+    const f = fileIn.files && fileIn.files[0];
+    if(!f){ showToast('Select an image first'); return; }
+    const dataURL = await readFile(f);
+    const img = new Image();
+    img.decoding='async';
+    img.onload = async ()=>{
+      // Resize if requested
+      const maxW = Number(resizeMax.value||0);
+      const scale = maxW>0 ? Math.min(1, maxW/img.width) : 1;
+      const W = Math.round(img.width*scale), H=Math.round(img.height*scale);
+      const canvas = document.createElement('canvas'); canvas.width=W; canvas.height=H;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img,0,0,W,H);
+      const type = fmt.value; const q = Number(quality.value);
+      try{
+        const blob = await new Promise((res)=> canvas.toBlob(res, type, q));
+        if(!blob){ showToast('Format not supported'); return; }
+        outBlob = blob;
+        const ext = {"image/png":"png","image/jpeg":"jpg","image/webp":"webp","image/avif":"avif"}[type]||'img';
+        outName = (f.name.replace(/\.[^.]+$/, '')||'image')+'.'+ext;
+        const url = URL.createObjectURL(blob);
+        const prev = new Image(); prev.src = url; prev.alt = 'Converted preview';
+        prev.onload = ()=> URL.revokeObjectURL(url);
+        setPreview(prev);
+        downloadBtn.disabled=false;
+        metaInfo.textContent = `Input: ${f.type||'unknown'} ${bytes(f.size)} · Output: ${type} ${bytes(blob.size)} · ${W}×${H}`;
+        showToast('Conversion complete');
+      }catch(e){
+        console.error(e); showToast('Error converting');
+      }
+    };
+    img.src = dataURL;
+  }
+
+  convertBtn.addEventListener('click', convert);
+  downloadBtn.addEventListener('click', ()=>{
+    if(!outBlob) return;
+    const a=document.createElement('a'); a.href=URL.createObjectURL(outBlob); a.download=outName; document.body.appendChild(a); a.click();
+    setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 0);
+  });
+
+  // Drag & drop
+  ;['dragenter','dragover','dragleave','drop'].forEach(evt=>{
+    preview.addEventListener(evt, e=>{ e.preventDefault(); e.stopPropagation(); });
+  });
+  preview.addEventListener('drop', e=>{
+    const dt = e.dataTransfer; if(!dt || !dt.files || !dt.files[0]) return;
+    fileIn.files = dt.files; convert();
+  });
+
+  </script>
+</body>
+</html>
